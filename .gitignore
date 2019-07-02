@@ -4,3 +4,7 @@ backend_mongo.ipynb
 .ipynb_checkpoints
 __pycache__
 venv
+client_secret*
+cert.pem
+key.pem
+logs

@@ -1,27 +1,48 @@
 from core.abstract import AbstractModel
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask import request
 
 
 class User(AbstractModel):
     _collection_name = 'user'
 
-    def __init__(self, username='', **kwargs):
+    def __init__(self, email='', **kwargs):
+        self.password = ''
+        self.credentials = {}
         super().__init__(**kwargs)
-        self.username = username.lower()
+        self.email = email.lower()
 
-    def validate_username(self):
-        self._validate_username_format()
-        self._validate_username_uniqueness()
+    @property
+    def exclude_fields(self):
+        return ['password', 'credentials']
 
-    def _validate_username_format(self):
-        if not self.username:
-            raise ValueError({'username': 'should not be blank'})
+    def set_password(self, password):
+        self.password = generate_password_hash(password)
+        return self
 
-    def _validate_username_uniqueness(self):
-        if User.find({'username': self.username.lower()}):
-            raise ValueError({'username': 'already existed'})
+    def check_password(self, password):
+        return check_password_hash(self.password, password)
+
+    def validate_email(self):
+        self._validate_email_format()
+        self._validate_email_uniqueness()
+
+    def validate_password(self):
+        password_is_empty = check_password_hash(self.password, '')
+        if password_is_empty:
+            raise ValueError(dict(password='should not be blank'))
+
+    def _validate_email_format(self):
+        if not self.email:
+            raise ValueError(dict(email='should not be blank'))
+
+    def _validate_email_uniqueness(self):
+        if User.find(email=self.email.lower()):
+            raise ValueError(dict(email='already existed'))
 
     @property
     def validators(self):
         return [
-            self.validate_username
+            self.validate_email,
+            self.validate_password,
         ]
