@@ -1,11 +1,9 @@
-import requests
 from .models import User
 from .oauths import GoogleOAuth
 from . import GOOGLE_OAUTH
 from utils import make_response
 from flask import request, url_for
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
-import logging
 
 
 def authenticate():
@@ -119,7 +117,6 @@ def check_response():
             jwt_identity=get_jwt_identity(),
         )
     )
-    logging.info(data)
 
     return make_response(data)
 
