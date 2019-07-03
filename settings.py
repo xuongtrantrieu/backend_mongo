@@ -63,7 +63,7 @@ def load():
 
     from apps.user.views import (get_users, register_user,
                                  authenticate, check_login, exchange_for_tokens,
-                                 check_response, login_with_google)
+                                 check_response, login_with_google, login_with_facebook)
 
     check_login.methods = ['GET']
     app.add_url_rule('/check', view_func=check_login)
@@ -78,6 +78,7 @@ def load():
     app.add_url_rule('/user/register', view_func=register_user)
 
     app.add_url_rule('/login-via-google', view_func=login_with_google)
+    app.add_url_rule('/login-via-facebook', view_func=login_with_facebook)
     app.add_url_rule('/token-exchange', view_func=exchange_for_tokens)
 
     check_response.methods = ['GET']

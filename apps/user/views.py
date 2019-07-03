@@ -1,8 +1,8 @@
 from .models import User
-from .oauths import GoogleOAuth
-from . import GOOGLE_OAUTH
+from .oauths import OAuth
+from . import GOOGLE_OAUTH, FACEBOOK_OAUTH
 from utils import make_response
-from flask import request, url_for
+from flask import request, url_for, redirect
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 
 
@@ -66,13 +66,7 @@ def register_user():
 
 
 def exchange_for_tokens():
-    provider = request.args.get('provider') or ''
-
-    if provider == GOOGLE_OAUTH:
-        auth = GoogleOAuth().exchange_for_tokens(request)
-    else:
-        auth = None
-
+    auth = OAuth(request=request).get_auth()
     email = auth.email
     if not email:
         return make_response(errors=auth.note, status_code=400)
@@ -83,7 +77,7 @@ def exchange_for_tokens():
         user = User(
             email=email,
             token=token,
-            credentials={provider: auth.credential},
+            credentials={auth.provider: auth.credential},
         )
         err = user.validate()
         if err:
@@ -93,7 +87,7 @@ def exchange_for_tokens():
         if err:
             return make_response(errors=err, status_code=400)
     else:
-        user.credentials.update({provider: auth.credential})
+        user.credentials.update({auth.provider: auth.credential})
         user, err = user.save()
         if err:
             return make_response(errors=err, status_code=400)
@@ -103,7 +97,18 @@ def exchange_for_tokens():
 
 def login_with_google():
     base_url = url_for('exchange_for_tokens', _external=True)
-    login_url = GoogleOAuth.get_login_url(base_url)
+    login_url = OAuth(GOOGLE_OAUTH).get_login_url(base_url)
+    if not login_url:
+        return make_response(errors='cannot get login url')
+
+    return make_response(login_url)
+
+
+def login_with_facebook():
+    base_url = url_for('exchange_for_tokens', _external=True)
+    login_url = OAuth(FACEBOOK_OAUTH).get_login_url(base_url)
+    if not login_url:
+        return make_response(errors='cannot get login url')
 
     return make_response(login_url)
 
